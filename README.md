@@ -36,5 +36,5 @@ func main() {
 Then run it with:
 
 ```
-    $ go run main.go
+$ go run main.go
 ```
