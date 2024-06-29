@@ -7,7 +7,7 @@ A lightweight HTTP router that serves JSON and static files.
 Import the router in your files. The dependency will be automatically added when you try to build/run/test.
 
 ```go
-import golightrouter "github.com/config-json/go-light-router"
+import lightrouter "github.com/config-json/go-light-router"
 ```
 
 ### Running go-light-router
@@ -19,13 +19,13 @@ A basic example:
 package main
 
 import (
-	golightrouter "github.com/config-json/go-light-router"
+	lightrouter "github.com/config-json/go-light-router"
 )
 
 func main() {
-	r := golightrouter.Default()
+	r := lightrouter.Default()
 
-	r.GET("/ping", func(req *golightrouter.Request, res *golightrouter.Response) {
+	r.GET("/ping", func(req *lightrouter.Request, res *lightrouter.Response) {
 		res.JSON("pong")
 	})
 

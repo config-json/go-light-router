@@ -1,4 +1,4 @@
-package golightrouter
+package lightrouter
 
 // HTTP methods
 type HTTPMethod string

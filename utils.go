@@ -1,4 +1,4 @@
-package golightrouter
+package lightrouter
 
 func formatHeaders(headers map[string]string) string {
 	result := ""

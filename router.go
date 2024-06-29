@@ -1,4 +1,4 @@
-package golightrouter
+package lightrouter
 
 import (
 	"fmt"
@@ -78,7 +78,6 @@ func handleConnection(r *Router, conn net.Conn) {
 	// Modifies the request route if the router has RedirectTrailingSlash enabled
 	r.trimSlash(&req, &res)
 
-	// Handle route not existent
 	r.handleNotFound(&req, &res)
 	r.handleMethodNotAllowed(&req, &res)
 
@@ -194,11 +193,12 @@ func removeRouteParams(route string) []string {
 
 // Slap some tests onto this bitch
 func (r *Router) matchingRoute(req *Request) string {
-	for route := range r.Routes {
 
-		if req.route == route {
-			return route
-		}
+	if r.Routes[req.route].handler != nil {
+		return req.route
+	}
+
+	for route := range r.Routes {
 
 		splitRoute := removeRouteParams(route)
 		splitReqRoute := strings.Split(req.route, "/")
@@ -235,7 +235,6 @@ func (r *Router) handleMethodNotAllowed(req *Request, res *Response) {
 			res.Status = http.StatusMethodNotAllowed
 			return
 		}
-
 		res.Status = http.StatusNotFound
 	}
 }
