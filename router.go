@@ -230,12 +230,14 @@ func (r *Router) handleNotFound(req *Request, res *Response) {
 // Handle 405
 func (r *Router) handleMethodNotAllowed(req *Request, res *Response) {
 	matchingRoute := r.matchingRoute(req)
-	if !r.HandleMethodNotAllowed && req.method != r.Routes[matchingRoute].method {
-		res.Status = http.StatusMethodNotAllowed
-	}
+	if req.method != r.Routes[matchingRoute].method {
+		if r.HandleMethodNotAllowed {
+			res.Status = http.StatusMethodNotAllowed
+			return
+		}
 
-	// If it's being handled, change the method to the supported one
-	req.method = r.Routes[matchingRoute].method
+		res.Status = http.StatusNotFound
+	}
 }
 
 // RedirectTrailingSlash
