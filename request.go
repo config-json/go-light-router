@@ -11,11 +11,19 @@ type Request struct {
 	route   string
 	params  map[string]string
 	headers map[string]string
-	body    string
+	// body    string
+}
+
+func (req *Request) GetParam(key string) string {
+	return req.params[key]
+}
+
+func (req *Request) GetHeader(key string) string {
+	return req.headers[key]
 }
 
 // "" as the value deletes the param
-func (r *Request) Param(key, value string) {
+func (r *Request) setParam(key, value string) {
 	if r.params == nil {
 		r.params = make(map[string]string)
 	}
@@ -26,22 +34,20 @@ func (r *Request) Param(key, value string) {
 	r.params[key] = value
 }
 
-func (req *Request) GetParam(key string) string {
-	return req.params[key]
-}
-
-func (req *Request) RouteToParams(route string) {
+// Looks for the params (prefixed by :) of the request's matching route and stores their values into a map
+func (req *Request) routeToParams(route string) {
 	splitReqRoute := strings.Split(req.route, "/")
 	splitRoute := strings.Split(route, "/")
 
 	for i, part := range splitRoute {
 		if strings.HasPrefix(part, ":") {
-			req.Param(part[1:], splitReqRoute[i])
+			req.setParam(part[1:], splitReqRoute[i])
 		}
 	}
 }
 
-func (req *Request) ReadRequest(conn *net.Conn) error {
+// Reads the request from the connection
+func (req *Request) readRequest(conn *net.Conn) error {
 	reader := bufio.NewReader(*conn)
 
 	// Read the request line (Method, Route)
@@ -53,14 +59,14 @@ func (req *Request) ReadRequest(conn *net.Conn) error {
 	req.method = HTTPMethod(split[0])
 	req.route = split[1]
 
-	// Read the headers
+	// Headers
 	for {
 		header, err := reader.ReadString('\n')
 		if err != nil {
 			return err
 		}
 
-		// Empty line means we're done, next is body
+		// Empty line means we're done
 		if header == "\r\n" {
 			break
 		}
@@ -74,11 +80,14 @@ func (req *Request) ReadRequest(conn *net.Conn) error {
 	}
 
 	// Read the body
-	body, err := reader.ReadString('\n')
-	if err != nil {
-		return err
-	}
-	req.body = body
+	// TODO: fix
+	/*
+		body, err := reader.ReadString('\n')
+		if err != nil {
+			return err
+		}
+		req.body = body
+	*/
 
 	return nil
 }

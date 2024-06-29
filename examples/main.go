@@ -7,6 +7,10 @@ import (
 func main() {
 	r := golightrouter.Default()
 
+	r.GET("/ping", func(req *golightrouter.Request, res *golightrouter.Response) {
+		res.JSON("pong")
+	})
+
 	r.GET("/foobar/:user", func(req *golightrouter.Request, res *golightrouter.Response) {
 		user := req.GetParam("user")
 		body := map[string]string{

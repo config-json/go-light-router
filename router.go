@@ -69,19 +69,23 @@ func handleConnection(r *Router, conn net.Conn) {
 	res := Response{}
 	req := Request{}
 
-	req.ReadRequest(&conn)
+	err := req.readRequest(&conn)
+	if err != nil && err != io.EOF {
+		fmt.Println("Error reading request:", err)
+		return
+	}
 
 	// Modifies the request route if the router has RedirectTrailingSlash enabled
-	r.TrimSlash(&req, &res)
+	r.trimSlash(&req, &res)
 
 	// Handle route not existent
-	r.NotFound(&req, &res)
-	r.MethodNotAllowed(&req, &res)
+	r.handleNotFound(&req, &res)
+	r.handleMethodNotAllowed(&req, &res)
 
 	// Handler executes if status 404/405 was not added
 	if res.Status != http.StatusNotFound && res.Status != http.StatusMethodNotAllowed {
-		matchingRoute := r.MatchingRoute(&req)
-		req.RouteToParams(matchingRoute)
+		matchingRoute := r.matchingRoute(&req)
+		req.routeToParams(matchingRoute)
 		r.Routes[matchingRoute].handler(&req, &res)
 
 		// Handle status automatically if the user/the handler didn't set it already
@@ -91,8 +95,8 @@ func handleConnection(r *Router, conn net.Conn) {
 	}
 
 	formattedStatus := fmt.Sprintf("HTTP/1.1 %d %s\r\n", res.Status, http.StatusText(res.Status))
-	formattedRes := formattedStatus + FormatHeaders(res.Headers) + "\r\n" + res.Body
-	_, err := conn.Write([]byte(formattedRes))
+	formattedRes := formattedStatus + formatHeaders(res.Headers) + "\r\n" + res.Body
+	_, err = conn.Write([]byte(formattedRes))
 
 	if err != nil {
 		fmt.Println("Error writing response:", err)
@@ -189,7 +193,7 @@ func removeRouteParams(route string) []string {
 }
 
 // Slap some tests onto this bitch
-func (r *Router) MatchingRoute(req *Request) string {
+func (r *Router) matchingRoute(req *Request) string {
 	for route := range r.Routes {
 
 		if req.route == route {
@@ -214,4 +218,34 @@ func (r *Router) MatchingRoute(req *Request) string {
 		}
 	}
 	return ""
+}
+
+// Handle 404
+func (r *Router) handleNotFound(req *Request, res *Response) {
+	if r.matchingRoute(req) == "" {
+		res.Status = http.StatusNotFound
+	}
+}
+
+// Handle 405
+func (r *Router) handleMethodNotAllowed(req *Request, res *Response) {
+	matchingRoute := r.matchingRoute(req)
+	if !r.HandleMethodNotAllowed && req.method != r.Routes[matchingRoute].method {
+		res.Status = http.StatusMethodNotAllowed
+	}
+
+	// If it's being handled, change the method to the supported one
+	req.method = r.Routes[matchingRoute].method
+}
+
+// RedirectTrailingSlash
+func (r *Router) trimSlash(req *Request, res *Response) {
+	if r.RedirectTrailingSlash && strings.HasSuffix(req.route, "/") && req.route != "/" {
+		req.route = req.route[:len(req.route)-1]
+		// If GET, return 301, for all other methods, return 307
+		if req.method == GET {
+			res.Status = http.StatusMovedPermanently
+		}
+		res.Status = http.StatusTemporaryRedirect
+	}
 }

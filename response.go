@@ -11,15 +11,11 @@ import (
 type Response struct {
 	Status  int
 	Headers map[string]string
-	Body    string // At least for JSON
+	Body    string
 	File    *os.File
 }
 
 // TODO: cookies
-
-/************************************/
-/******** RESPONSE RENDERING ********/
-/************************************/
 
 // "" as the value deletes the header
 func (r *Response) Header(key, value string) {
@@ -33,6 +29,7 @@ func (r *Response) Header(key, value string) {
 	r.Headers[key] = value
 }
 
+// Serializes the data into JSON and sets headers/body
 func (r *Response) JSON(data interface{}) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
