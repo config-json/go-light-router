@@ -191,7 +191,7 @@ func removeRouteParams(route string) []string {
 	return splitRoute
 }
 
-// Slap some tests onto this bitch
+// TODO add tests
 func (r *Router) matchingRoute(req *Request) string {
 
 	if r.Routes[req.route].handler != nil {
